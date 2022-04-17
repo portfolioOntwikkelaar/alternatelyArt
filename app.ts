@@ -19,7 +19,7 @@ class Particle implements ISimObject{
   ttl = 500
   lifetime = 500
   color = 'black'
-  constructor(private w:number, private h:number){
+  constructor(private w:number, private h:number, private palette:string[]){
     this.x = GetRandomFloat(0, w)
     this.y = GetRandomFloat(0, h)
 
@@ -28,41 +28,72 @@ class Particle implements ISimObject{
 
     this.radius = GetRandomFloat(0.05, MaxParticleSize)
     this.lifetime = this.ttl = GetRandomInt(25, 50)
+
+    this.color = palette[GetRandomInt(0, palette.length)]
   }
   Update(){
-    //imp this
+    let dRadius = GetRandomFloat(-MaxParticleSize/10, MaxParticleSize/10)
+    const dSpeed = GetRandomFloat(-0.01, 0.01)
+    const dTheta = GetRandomFloat(-Math.PI/8, Math.PI/8)
+    
+
+    this.speed += dSpeed
+    this.theta += dTheta
+    const [dx, dy] = FromPolar(this.speed, this.theta)
+    this.x += dx
+    this.y += dy
+    this.radius += dRadius
+    this.radius += (this.radius < 0) ? - 2*dRadius : 0
    }
    Draw(ctx:CanvasRenderingContext2D){
-     //imp this
+     ctx.save()
+     this.experiment1(ctx)
+     ctx.restore()
      
+   }
+   experiment1(ctx:CanvasRenderingContext2D){
+     ctx.fillStyle = this.color
+     let circle = new Path2D()
+     circle.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+     ctx.fill(circle)
    }
 }
 const ParticleCount = 200
+const ColorPalettes = [["#8A476D","#E4E786","#FB8D5F","#5FFBB0", "#FB5F5F"],["#B8A1A1","#5D40B7","#362B57","#A8F887","#87F8EB"], ["#0D0F0F","#FFFFFF","#2B5C5C","#DCB932","#9032DC"]]
 
 class Simulation implements ISimObject{
   
   particles:Particle[] = []
+  palette:string[] = []
   constructor(private width:number, private height:number){
+    this.palette = ColorPalettes[GetRandomInt(0, ColorPalettes.length)]
     for (let i = 0; i < ParticleCount; i++) {
       this.particles.push(
-        new Particle(this.width, this.height)
+        new Particle(this.width, this.height, this.palette)
       )
       
     }
   }
   Update(){
-   //imp this
+   this.particles.forEach( p => p.Update() )
   }
+  init = false
   Draw(ctx:CanvasRenderingContext2D){
     //imp this
-    ctx.fillStyle = 'green'
+    if (!this.init) {
+      ctx.fillStyle = 'red'
     ctx.fillRect(0,0,this.width,this.height)
+    this.init = true
+    }
+    
+
+    this.particles.forEach( p=> p.Draw(ctx))
   }
 }
 
 function bootstrapper() {
-  const width = 400
-  const height = 400
+  const width = 1700
+  const height = 700
 
   const updateFrameRate = 50
   const renderFrameRate = 50

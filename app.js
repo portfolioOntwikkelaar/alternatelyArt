@@ -10,9 +10,10 @@ function FromPolar(v, theta) {
 }
 var MaxParticleSize = 3;
 var Particle = /** @class */ (function () {
-    function Particle(w, h) {
+    function Particle(w, h, palette) {
         this.w = w;
         this.h = h;
+        this.palette = palette;
         this.x = 0;
         this.y = 0;
         this.speed = 0;
@@ -27,38 +28,64 @@ var Particle = /** @class */ (function () {
         this.theta = GetRandomFloat(0, 2 * Math.PI);
         this.radius = GetRandomFloat(0.05, MaxParticleSize);
         this.lifetime = this.ttl = GetRandomInt(25, 50);
+        this.color = palette[GetRandomInt(0, palette.length)];
     }
     Particle.prototype.Update = function () {
-        //imp this
+        var dRadius = GetRandomFloat(-MaxParticleSize / 10, MaxParticleSize / 10);
+        var dSpeed = GetRandomFloat(-0.01, 0.01);
+        var dTheta = GetRandomFloat(-Math.PI / 8, Math.PI / 8);
+        this.speed += dSpeed;
+        this.theta += dTheta;
+        var _a = FromPolar(this.speed, this.theta), dx = _a[0], dy = _a[1];
+        this.x += dx;
+        this.y += dy;
+        this.radius += dRadius;
+        this.radius += (this.radius < 0) ? -2 * dRadius : 0;
     };
     Particle.prototype.Draw = function (ctx) {
-        //imp this
+        ctx.save();
+        this.experiment1(ctx);
+        ctx.restore();
+    };
+    Particle.prototype.experiment1 = function (ctx) {
+        ctx.fillStyle = this.color;
+        var circle = new Path2D();
+        circle.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fill(circle);
     };
     return Particle;
 }());
 var ParticleCount = 200;
+var ColorPalettes = [["#8A476D", "#E4E786", "#FB8D5F", "#5FFBB0", "#FB5F5F"], ["#B8A1A1", "#5D40B7", "#362B57", "#A8F887", "#87F8EB"], ["#0D0F0F", "#FFFFFF", "#2B5C5C", "#DCB932", "#9032DC"]];
 var Simulation = /** @class */ (function () {
     function Simulation(width, height) {
         this.width = width;
         this.height = height;
         this.particles = [];
+        this.palette = [];
+        this.init = false;
+        this.palette = ColorPalettes[GetRandomInt(0, ColorPalettes.length)];
         for (var i = 0; i < ParticleCount; i++) {
-            this.particles.push(new Particle(this.width, this.height));
+            this.particles.push(new Particle(this.width, this.height, this.palette));
         }
     }
     Simulation.prototype.Update = function () {
-        //imp this
+        this.particles.forEach(function (p) { return p.Update(); });
     };
     Simulation.prototype.Draw = function (ctx) {
         //imp this
-        ctx.fillStyle = 'green';
-        ctx.fillRect(0, 0, this.width, this.height);
+        if (!this.init) {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 0, this.width, this.height);
+            this.init = true;
+        }
+        this.particles.forEach(function (p) { return p.Draw(ctx); });
     };
     return Simulation;
 }());
 function bootstrapper() {
-    var width = 400;
-    var height = 400;
+    var width = 1700;
+    var height = 700;
     var updateFrameRate = 50;
     var renderFrameRate = 50;
     var canvas = document.createElement('canvas');
