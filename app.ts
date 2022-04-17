@@ -81,7 +81,7 @@ class Simulation implements ISimObject{
   Draw(ctx:CanvasRenderingContext2D){
     //imp this
     if (!this.init) {
-      ctx.fillStyle = 'red'
+      ctx.fillStyle = this.palette[0]
     ctx.fillRect(0,0,this.width,this.height)
     this.init = true
     }
